@@ -23,6 +23,21 @@ while [ $# -gt 0 ]; do
     shift
 done
 
+# Here we rsync the files over from /usr/local/src to /var/www/html after the container
+# starts up. This is because if any of the directories are mounted as bind mountpoints,
+# they would be mounted on top of the already-existing files, and render them unable to
+# be accessed (e.g. /var/www/html/modules). This ensures that not only do we copy the
+# files to the appropriate directories, but it also ensures that the correct modules are
+# present, by ensuring that the modules that are present in that directory are the ones
+# That are compatible with this version of the container. Note that we also pass the
+# --remove-source-files flag here so that all of the files in /usr/local/src get removed
+# just in case we're working on a space-constrained system.
+rsync --remove-source-files -av /usr/local/src /var/www/html
+
+# Let's do the chmod/chown up here before the install
+chmod -R u=rwX,g=rX,o=rX /var/www/html
+chown -R www-data:root /var/www/html
+
 mkdir -p storage/framework/{sessions,views,cache}
 mkdir -p storage/app/uploads
 
@@ -53,6 +68,7 @@ else
     unset COMPANY_NAME COMPANY_EMAIL ADMIN_EMAIL ADMIN_PASSWORD
 fi
 
+# Also chmod/chown after the install, why not.
 chmod -R u=rwX,g=rX,o=rX /var/www/html
 chown -R www-data:root /var/www/html
 

@@ -45,13 +45,15 @@ RUN docker-php-ext-configure gd \
     pdo_mysql \
     zip
 
+# Here we're putting the files into /usr/local/src so that we don't have the modules volume
+# overwrite the directory if it gets mounted as a bind mountpoint.
 RUN mkdir -p /var/www/akaunting \
  && curl -Lo /tmp/akaunting.zip 'https://akaunting.com/download.php?version=latest&utm_source=docker&utm_campaign=developers' \
- && unzip /tmp/akaunting.zip -d /var/www/html \
+ && unzip /tmp/akaunting.zip -d /usr/local/src \
  && rm -f /tmp/akaunting.zip
 
 COPY files/akaunting.sh /usr/local/bin/akaunting.sh
-COPY files/html /var/www/html
+COPY files/html /usr/local/src
 
 ENTRYPOINT ["/usr/local/bin/akaunting.sh"]
 CMD ["--start"]
